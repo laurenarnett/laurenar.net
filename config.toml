@@ -1,0 +1,81 @@
+baseURL = "https://laurenar.net/"
+languageCode = "en-us"
+title = "Lauren Arnett"
+theme = "ink"
+paginate = 5
+
+#_copyright = "© Copyright notice"
+
+pygmentsstyle = "vs"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+
+#googleAnalytics = "UA-123-45"
+#disqusShortname = "ink-demo"
+
+[params]
+	subtitle = "Software Developer"
+
+        lauren = "Hi! My name is Lauren Arnett."
+
+        bio = "I currently work on ETL systems for trading platforms as a Software Developer at [BroadPeak Partners, NYC](https://broadpeakpartners.com/). I completed my bachelor's degree in Computer Science at Columbia University in 2019, where I served as a research assistant exploring human-data interaction in the [WuLab](https://cudbg.github.io/lab/)."
+
+        hobbies = "I also tutor programming to kids in [Racket](https://htdp.org/2019-02-24/index.html)."
+
+        avatar = "https://avatars0.githubusercontent.com/u/22421815?s=460&u=7d132201a67dd4edf2ad6ece72cb1e1c63804fb8&v=4"
+
+	# Content types to disable Disqus on.
+	# disableDisqusTypes = ["page"]
+	
+	featherIconsCDN = true
+
+	#mode = "auto" # "dark" or "auto"
+	customCSS = "css/custom.css"  # Custom CSS applied to default styles.
+	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
+	# customJS = ["js/custom.js", "js/custom1.js"]  # Custom JS scripts.
+
+# Nav.
+[[menu.main]]
+name = "Home"
+url = "/"
+weight = 1
+
+# [[menu.main]]
+# name = "All posts"
+# url = "/posts"
+# weight = 2
+
+[[menu.main]]
+name = "Projects"
+url = "/projects"
+weight = 3
+
+[[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 4
+
+[[params.social]]
+name = "Github"
+icon = "github"
+url = "https://github.com/laurenarnett"
+
+
+[[params.social]]
+name = "LinkedIn"
+icon = "linkedin"
+url = "https://www.linkedin.com/in/lauren-arnett-6ab037117/"
+
+
+[[params.social]]
+name = "Twitter"
+icon = "twitter"
+url = "https://twitter.com/_laurenarnett"
+
+# [[params.social]]
+# name = "RSS"
+# icon = "rss"
+# url = "/index.xml"
+
+[taxonomies]
+   tag = "tags"
