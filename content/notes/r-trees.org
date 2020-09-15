@@ -5,21 +5,29 @@
 
 * Context
 ** Opportunity addressed
+
    # What was the unmet need or opportunity? Does it make sense?
+
    Traditional indexing methods do not work well on data in multi-dimensional spaces.
    Cannot use either hash tables or B-trees/ISAM indexes.
    
 ** Existing approaches
+
    # What were existing approaches and why do they work or not work?
+
    - Cell methods: not good for dynamic structures.
    - Quad trees, K-D trees, K-D-B trees
    - Corner stitching: does not scale to random searches in large datasets
    - Grid files: map to point in higher dimensional space.
 ** Example use-cases
+
    # What is the simplest example that highlights the problem that this approach works best for?
+
    CAD and geo-data applications. Ex. queries on maps: "find all \(x\) within \(n\) miles of a point" 
 ** Contributions
+
    # Does the paper (and its contributions) matter?
+
 *** R-Trees
     - Leaf nodes: \((I, tuple-identifier)\): \(I\) is a bounding box of the \(n\)-dimensional spatial object at this index
     - Each \(I_i\) is an interval for extent of object along dimension \(i\)
@@ -30,38 +38,49 @@
      - Where \(m\) is minimum branching factor and \(N\) is number of index records,
        - \(|\dfrac{N}{m} + \dfrac{N}{m^2}| \leq \) Height \(\leq |\log_m N| - 1\)
 ** Hypotheses
+
    # What are the actual hypotheses?
+
    There are two algorithms provided for node splitting: in quadratic but more precise, and in
    linear but less precise. Each use-case can evaluate how the time/precision trade offs can be made
    appropriately to select one of these algorithms.
 * Approach
 ** Evaluation
+
    # How do they seek to validate their hypotheses? Do they make sense?
    # Is the evaluation cursory or deep?
    # Is the evaluation fair? Are there possible biases in how the workload is selected?
+
    Evaluate practicality of structure, choose values for \(M\) and \(m\), and evaluate the node-splitting algorithms.
 
 ** Results
+
    # Do you believe their results?
    # Are the results presented well?
+
    Linear algorithm performs fastest: only a small amount of CPU time is due to node splitting.
    Deleting an item affected by \(m\). Both node-splitting algorithms provide reasonable performance (within 10% of exhaustive).
    Test on up to 5000 records. Quadratic and linear have nearly same search performance.
 
 ** Takeaways
+
    Linear node-split algorithm is recommended over quadratic or exhaustive. Easy to add to RDS that supports conventional access methods.
 
 * Remaining questions
+
   - What are the heuristics for selecting between overlapping entries in insertion?
   - How did they select \(m\) for their tests on split algorithms?
 
 * Multi-dimensional indexes vs. traditional B/B+ tree indexes
+
    # What distinguishes multi-dimensional indexes from traditional B/B+ tree indexes?
+
    R-trees represent data objects by intervals in several dimensions.
    R-trees are also height-balanced trees with index records in leaves.
    Index records represent a bounding box.
    Insertion works similarly to B-trees, but =CondenseTree= works differently, removing the entire node
    and re-inserting each entry rather than merging adjacent nodes.
+
 # * Optimization criteria
    # Does the optimization criteria proposed in the RTree paper make sense?
    # Is the evaluation fair? Are there possible biases in how the workload is selected?
