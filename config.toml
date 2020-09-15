@@ -34,6 +34,9 @@ pygmentscodefencesguesssyntax = true
 	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
 	# customJS = ["js/custom.js", "js/custom1.js"]  # Custom JS scripts.
 
+        # ignoreFiles = [ "\\.org$" ]
+        math = true
+
 # Nav.
 [[menu.main]]
 name = "Home"
@@ -50,10 +53,15 @@ name = "Projects"
 url = "/projects"
 weight = 3
 
-[[menu.main]]
-name = "Tags"
-url = "/tags"
-weight = 4
+# [[menu.main]]
+# name = "Notes"
+# url = "/notes"
+# weight = 4
+
+# [[menu.main]]
+# name = "Tags"
+# url = "/tags"
+# weight = 4
 
 [[params.social]]
 name = "Github"
