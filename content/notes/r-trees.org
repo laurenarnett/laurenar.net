@@ -1,5 +1,4 @@
-#+TITLE: R Trees: A Dynamic Index Structure for Spatial Searching
-#+subtitle: Guttmann 1984
+#+TITLE: R Trees: A Dynamic Index Structure for Spatial Searching (Guttman 1984)
 #+DATE: 2020-09-14
 #+math: true
 
@@ -19,11 +18,13 @@
    - Quad trees, K-D trees, K-D-B trees: expensive when the distribution of your data changes.
    - Corner stitching: does not scale to random searches in large datasets
    - Grid files: map to point in higher dimensional space.
+
 ** Example use-cases
 
 # What is the simplest example that highlights the problem that this approach works best for?
 
    CAD and geo-data applications. Ex. queries on maps: "find all \(x\) within \(n\) miles of a point" 
+
 ** Contributions
 
 # Does the paper (and its contributions) matter?
@@ -49,6 +50,7 @@
    linear but less precise. Each use-case can evaluate how the time/precision trade offs can be made
    appropriately to select one of these algorithms.
    Min total covering area is correlated with query performance.
+
 * Approach
 ** Evaluation
 
