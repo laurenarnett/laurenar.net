@@ -6,7 +6,7 @@
 * Context
 ** Opportunity addressed
 
-   # What was the unmet need or opportunity? Does it make sense?
+# What was the unmet need or opportunity? Does it make sense?
 
    Traditional indexing methods do not work well on data in multi-dimensional spaces.
    Cannot use either hash tables or B-trees/ISAM indexes.
