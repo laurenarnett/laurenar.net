@@ -1,0 +1,45 @@
+#+TITLE: Join Processing in Database Systems with Large Main Memories (Shapiro 1986)
+#+DATE: 2020-09-16
+#+math: true
+
+* Context
+** Opportunity addressed
+   
+** Existing approaches
+
+# What were existing approaches and why do they work or not work?
+
+** Example use-cases
+
+# What is the simplest example that highlights the problem that this approach works best for?
+
+** Contributions
+
+# Does the paper (and its contributions) matter?
+
+** Hypotheses
+
+# What are the actual hypotheses?
+
+* Approach
+** Evaluation
+
+# How do they seek to validate their hypotheses? Do they make sense?
+# Is the evaluation cursory or deep?
+# Is the evaluation fair? Are there possible biases in how the workload is selected?
+
+
+** Results
+
+# Do you believe their results?
+# Are the results presented well?
+
+** Takeaways
+
+
+* Remaining questions
+
+
+#   Identify 2 strengths of the paper (in terms of insight, writing technique, evaluation, technical idea)
+#   Identify one weakness that the paper could improve upon
+#   The paper was written several decades ago. What is still relevant? What has changed?
