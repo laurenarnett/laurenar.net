@@ -1,0 +1,96 @@
+#+TITLE: Generalized Search Trees for Database Systems (Hellerstein 1995)
+#+DATE: 2020-09-18
+#+math: true
+
+* Context
+** Opportunity addressed
+   GiST, extensible in data types it can index & queries it can support. General, so can be adapted to implement both B+ trees and R trees.
+   Only requires six methods with the database system. Also contribute RD-trees.
+
+** Existing approaches
+
+# What were existing approaches and why do they work or not work?
+
+  R-Trees for spatial search: requires domain-specific search trees.
+  B+ and R-trees can be made extensible, but B+ trees only support equality and linear range predicate queries. 
+  R-trees only support equality, overlap, and containment (all region: "find all \(i\) such that \(x_1, y_1, x_2, y_2\) overlaps \(i\)") predicate queries.
+  Will not work on new data types for queries that are "natural to the types".
+  Extensible-key indices: allow many data types to be indexed, but only allow fixed set of query predicates.
+
+** Example use-cases
+
+# What is the simplest example that highlights the problem that this approach works best for?
+
+   Use an R-tree to index data that has not been mapped to a spatial domain. Index data of a non-numerical datatype.
+   Set-containment predicates, "All supersets of {6, 7, 68}"
+
+** Contributions
+
+# Does the paper (and its contributions) matter?
+Theory:
+- Generalize a search key: "any arbitrary predicate that holds for each datum below the key"
+- Generalize a database search tree: "hierarchy of partitions of a dataset, s.t. each partition has a categorization that holds for all data in the partition."
+
+*** The Generalized Search Tree
+    Properties:
+    - node fill: between \(kM\) and \(M\), \(\dfrac{2}{M} \leq k \leq \dfrac{1}{2}\)
+      - root node between 2 and \(M\)
+    - leaf nodes: (\(p\), =ptr=) with predicate \(p\) that must hold true for tuple. All leaves appear at same level.
+    - non-leaf nodes: (\(p\), =ptr=) with \(p\) that must hold true for tuples reachable from =ptr=.
+      - do not require \(p\) to be functionally dependent on parent. 
+# check functional dependency wording
+
+*** Key Methods (User defined)
+    - Consistent(\(E,q\)). Just helps with performance. Provide some function takes query predicate \(q\) and returns false if \(p \land q\) is definitely unsatisfiable.
+      - Returning a false positive does not affect correctness of tree algorithms.
+    - Union(\(P\)). Return a predicate that holds for all tuples below: \(p_1 \lor \dots \lor p_n \rightarrow r\)
+    - Compress(\(E\)). Some function to compress \(p\), the predicate in (\(p\), =ptr=).
+    - Decompress(\(E\)). Lossy inverse of compress. Returns (\(r\), =ptr=) s.t. \(p \rightarrow r\).
+    - Penalty(\(E_1, E_2\)). Penalty for inserting \(E_2\) into subtree rooted at \(E_1\). Represent increase in size to Union({\(E_1, E_2\)}).
+      - In R-trees, this is Area(\(E_1 \cup E_2\)) - Area(\(E_1.p_1\))
+    - PickSplit(\(P\)). Method to split a set of entries into two sets of entries of size at least the minimum fill factor.
+
+*** Tree Methods (GiST defined)
+    - Search: recursively search predicates and return tuples satisfying the predicate.
+      - IsOrdered flag: allows for more efficient search method if you know linear ordering since you only visit one root-to-leaf path.
+        - user must implement a comparator.
+        - runs FindMin and Next algorithms. Based on B+ trees.
+    - Insert: find where \(E\) should go and add it there, splitting if necessary.
+      - ChooseSubtree: recursively descend tree minimizing penalty.
+      - Split: Split up elements of node including new tuple. Generate a new node for one of the groups, inserts it into tree, and updates keys above new node.
+    - Delete: same as R-tree reinsertion.
+
+
+** Hypotheses
+
+# What are the actual hypotheses?
+
+* Approach
+** Evaluation
+
+# How do they seek to validate their hypotheses? Do they make sense?
+# Is the evaluation cursory or deep?
+# Is the evaluation fair? Are there possible biases in how the workload is selected?
+
+Evaluate through "case-studies" implementing several tree varieties as GiSTs.
+
+** Results
+
+# Do you believe their results?
+# Are the results presented well?
+
+*** B+-Trees (GiSTs Over \(\mathbb{Z}\))
+    - leftmost and rightmost boundaries on a node left unspecified.
+
+** Takeaways
+   Builds off of R-tree paper. If R-tree had not been written, this work on making it extensible to other datatypes would not exist.
+
+* Remaining questions
+
+
+#   Identify 2 strengths of the paper (in terms of insight, writing technique, evaluation, technical idea)
+#   Identify one weakness that the paper could improve upon
+#   The paper was written several decades ago. What is still relevant? What has changed?
+
+
+* Additional info
