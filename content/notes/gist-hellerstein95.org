@@ -47,7 +47,7 @@ Theory:
     - Compress(\(E\)). Some function to compress \(p\), the predicate in (\(p\), =ptr=).
     - Decompress(\(E\)). Lossy inverse of compress. Returns (\(r\), =ptr=) s.t. \(p \rightarrow r\).
     - Penalty(\(E_1, E_2\)). Penalty for inserting \(E_2\) into subtree rooted at \(E_1\). Represent increase in size to Union({\(E_1, E_2\)}).
-      - In R-trees, this is Area(\(E_1 \cup E_2\)) - Area(\(E_1.p_1\))
+      - In R-trees, this is Area(\(E_1 \cup E_2\)) - Area(\(E_1.p_1\)) "change in area of full bounding box due to adding the next bounding box."
     - PickSplit(\(P\)). Method to split a set of entries into two sets of entries of size at least the minimum fill factor.
 
 *** Tree Methods (GiST defined)
@@ -80,17 +80,39 @@ Evaluate through "case-studies" implementing several tree varieties as GiSTs.
 # Are the results presented well?
 
 *** B+-Trees (GiSTs Over \(\mathbb{Z}\))
+    - All functionality implemented with ranges.
     - leftmost and rightmost boundaries on a node left unspecified.
+*** R-trees (GiSTs Over \(\mathbb{R}^2\)
+    - All functionality implemented with bounding boxes.
+    - R* trees may be implemented using GiSTs with attention to implementation of Penalty algorithm.
+    - R+ trees may not be implemented as they place duplicate copies of data entries in multiple leaf nodes.
+    - Allows you to query topological relations
+      - "All polygons overlapping more than 30% of this box"
+      - "All polygons overlapping some angle"
 
+*** RD-trees (GiSTs Over \(P(\mathbb{Z})\)
+    Sets as containment keys
+    - Compress: Sort elements of S and then convert to a set of n disjoint ranges
+
+*** Performance issues
+    - performance varies with amount of keys on nodes that overlap
+    - "Lossy index": information loss due to key compression: eg two bounding boxes may represent different contained data points.
+    - data overlap: if data objects overlap, their keys are likely to as well, requiring search of multiple branches.
+
+**** Evaluate performance issues using RD trees
+     - Create sets of data, varying the amount of overlap.
+
+      
 ** Takeaways
    Builds off of R-tree paper. If R-tree had not been written, this work on making it extensible to other datatypes would not exist.
 
 * Remaining questions
 
+  Introduce two issues for further exploration: Hot spots (integers appearing in many sets) and correlation factor (how frequently two integers appear together in sets)
+  "Indexability theory" still needed to describe whether trying to index a given data set is practical for a given set of queries.
+  "There is no good reason to develop new, dis-tinct search tree structures if comparable performance can beobtained in a unified framework."
 
 #   Identify 2 strengths of the paper (in terms of insight, writing technique, evaluation, technical idea)
 #   Identify one weakness that the paper could improve upon
 #   The paper was written several decades ago. What is still relevant? What has changed?
 
-
-* Additional info
