@@ -1,0 +1,150 @@
+#+TITLE: Generalized Search Trees for Database Systems (Hellerstein 1995)
+#+DATE: 2020-09-18
+#+math: true
+
+* Title
+   GiST
+   - builds on previous work in domain-specific search trees to generalize it
+   - extensible in data types it can index & queries it can support. 
+
+** Domain Specific search trees
+# What were existing approaches and why do they work or not work?
+
+   - Support querying spatial data by indexing using a bounding box
+   - Only work on containment or region based queries:
+   - "find all polygons such that some bounding box overlaps it"
+   - do not work on more specific spatial queries:
+     - "All polygons overlapping more than 30% of this box"
+     - "All polygons overlapping some angle"
+   - What if some new, un-ordered data type is introduced, like a set?
+
+** Motivation
+   - Toward support extensible indexes on unordered data, authors introduce GiST
+# What is the simplest example that highlights the problem that this approach works best for?
+   - Provide an extensible interface for implementing new domain-specific search trees
+     - B+ and R tree implementations take 3000 lines of C code individually
+     - on top of GiST, ~500 each.
+   - New, unordered data types like sets 
+     - or application specific data types
+     - query with set-containment predicates 
+   - Unconstrained query predicates
+     - On already supported ordered data types
+     - they can run queries like, ... 
+   - Postgres had extensible B+ and R trees
+     - but limited to range queries
+     - movies < something
+   - By introducing unconstrained predicates, 
+     - can build indexes for when users issue queries more relevant to the data type,
+     - "find all movies with cool explosions,"
+     - however they may define a cool explosions predicate
+
+** The Generalized Search Tree
+      - The framework they introduce, or
+      - GiST is simply
+      - balanced tree
+        - p predicate
+        - Unlike B+ & R trees,
+            - keys on a page may overlap
+            - do not require child predicates to be functionally dependent on parent.
+            - can be any predicate
+      - These key predicates are specified in a user defined class
+
+** Interface methods
+   - user defines
+   - Consistent
+     - Provide some function takes query predicate \(q\) and returns false if \(p \land q\) is definitely unsatisfiable.
+     - if so, branch will be skipped in search procedure
+
+   - Union(\(P\)). 
+     - Return a predicate that holds for all tuples
+     - usually predicate with logical or applied to all the keys
+   - Penalty(\(E_1, E_2\)). Penalty to measure how bad inserting an entry at a location would be.
+     - In R-trees, this is "change in area of full bounding box when you try adding the next bounding box."
+   - PickSplit(\(P\)). When you overfill, this tells you how to split set of entries, into separate nodes 
+
+   - Compress(\(E\)). Some function to compress predicate of an entry.
+   - Decompress(\(E\)). Potential lossy inverse of compress. 
+
+*** Tree Methods (GiST defined)
+    - So now that user has gone through and diligently defined each of these interface methods
+    - Search: 
+      - recursively search predicates and return tuples satisfying the query predicate.
+      - if user is looking at range predicates on ordered domain,
+      - IsOrdered flag
+        - user required to register a comparator
+        - search will proceed traversing leftmost consistent
+        - scanning to the right following linked list
+        - just like with a b+ tree
+
+
+    - Insert: find where an entry should go and add it there, splitting if necessary.
+      - recursively descend tree minimizing penalty.
+      - if room at leaf, normal insert
+      - else split using PickSplit
+      - Propagate changes upward using Union
+      
+    - Delete
+      - find entry using search
+      - propagate upward changing the predicates of parent nodes
+
+** Evaluation
+
+# How do they seek to validate their hypotheses? Do they make sense?
+# Is the evaluation cursory or deep?
+# Is the evaluation fair? Are there possible biases in how the workload is selected?
+
+Evaluate through "case-studies" implementing trees as GiSTs and seeing what the user defined methods would be for each of B+ and R trees
+*** RD Trees:
+    Introduce a new variety of tree towards their set data use case
+    - Sets are used as containment keys
+    - Query predicates are allowed to be the set operations here
+    - use in some more quantitative analysis later
+*** Gist Performance
+    - B+ trees guaranteed O log n, since they're still on ordered data, only have to search one root to leaf path
+    - R trees and RD trees
+    - Search may have to traverse multiple paths
+    - worst case O 2n
+    - having to search multiple paths can be caused by
+    - information loss due to key compression: 
+      - eg two bounding boxes may represent different contained data points.
+
+    - data overlap: 
+      - if data objects overlap, their keys are likely to as well
+
+**** Performance issues
+     - Using RD trees, authors study these two causes quantitatively
+     - Create sets of data, varying the amount of overlap.
+     - to simulate different ratios of compression loss/data overlap
+     - performance varies with amount of keys on nodes that overlap
+       - based on number IO operations one has to do during tree search
+
+     - Identify two potential causes for data overlap to be addressed in further exploration: 
+       - Hot spots (same data object appears in many sets) 
+       - correlation factor (how frequently two data objects appear together in sets)
+
+     - So that wraps it up for the paper, and then I thought we could take a quick look at how GiSTs are being used in the real world.
+*** Postgres
+    - grabbing implementation based on column's data type
+*** PostGIS
+    Geographic data, basically an R tree.
+
+** Final thoughts
+   Something that struck me looking at POSTGRES and POSTGIS was that they're ordered data.
+   Deeply appreciate their generalizing to unordered data and identifying what methods make an index unique,
+   but it seems like in real world situations, it would be hard to find an application to take advantage of the full generality of their framework.
+    
+   Introduce some interesting questions about the context in which indexes should be used
+   Professor papadimitriou has worked on
+
+   Does anyone know of real world use cases with unordered data?
+   Do people think these are still relevant?
+
+
+
+  Introduce two issues for further exploration: Hot spots (integers appearing in many sets) and correlation factor (how frequently two integers appear together in sets)
+  "Indexability theory" still needed to describe whether trying to index a given data set is practical for a given set of queries.
+  "There is no good reason to develop new, dis-tinct search tree structures if comparable performance can be obtained in a unified framework."
+
+#   Identify 2 strengths of the paper (in terms of insight, writing technique, evaluation, technical idea)
+#   Identify one weakness that the paper could improve upon
+#   The paper was written several decades ago. What is still relevant? What has changed?
