@@ -1,58 +1,110 @@
-<!DOCTYPE html>
-<html {{- if (eq .Site.Params.mode "dark") -}}class="dark"{{ end }}>
-{{ partial "header.html" . }}
-<body>
-	<div class="container wrapper">
-	  {{ partial "head.html" . }}
-          <div class="personal bio">
-		{{- if isset .Site.Params "lauren" -}}
-		<p>{{ .Site.Params.Lauren | markdownify }}</p>
-		{{- end -}}
-          </div>
-          <div class="personal bio">
-		{{- if isset .Site.Params "bio" -}}
-		<p>{{ .Site.Params.Bio | markdownify }}</p>
-		{{- end -}}
-          </div>
-          <div>
-		{{- if isset .Site.Params "hobbies" -}}
-		<p>{{ .Site.Params.Hobbies | markdownify }}</p>
-		{{- end -}}
-          </div>
-		<!-- <div class="recent-posts section"> -->
-		<!-- 	<div class="posts"> -->
-		<!-- 		{{ $pages := where .Site.RegularPages "Type" "in" .Site.Params.mainSections }} -->
-		<!-- 		{{ $paginator := .Paginate (where $pages "Params.hidden" "ne" true) }} -->
-		<!-- 		{{ range $paginator.Pages }} -->
-		<!-- 			<div class="post"> -->
-		<!-- 				<div class="post-header"> -->
-		<!-- 					<div class="meta"> -->
-		<!-- 						<div class="date"> -->
-		<!-- 							<span class="day">{{ dateFormat "02" .Date }}</span> -->
-		<!-- 					<span class="rest">{{ if $.Site.Data.month }}{{ index $.Site.Data.month (printf "%d" .Date.Month) }} {{ .Date.Year }}{{ else }}{{ dateFormat "Jan 2006" .Date }}{{ end }}</span> -->
-		<!-- 						</div> -->
-		<!-- 					</div> -->
-		<!-- 					<div class="matter"> -->
-		<!-- 						<h4 class="title small"> -->
-		<!-- 							<a href="{{ .RelPermalink }}">{{.Title}}{{ if .Draft }}<sup class="draft-label">DRAFT</sup>{{ end }}</a> -->
-		<!-- 						</h4> -->
-		<!-- 						<span class="description"> -->
-		<!-- 							{{ if isset .Params "description" }} -->
-		<!-- 								{{ .Description }} -->
-		<!-- 							{{ else if gt (len .RawContent) 120 }} -->
-		<!-- 								{{ slicestr .RawContent 0 120 }}... -->
-		<!-- 							{{ else }} -->
-		<!-- 								{{ .RawContent }} -->
-		<!-- 							{{ end }} -->
-		<!-- 						</span> -->
-		<!-- 					</div> -->
-		<!-- 				</div> -->
-		<!-- 			</div> -->
-		<!-- 		{{ end }} -->
-		<!-- 		{{ template "partials/paginator.html" . }} -->
-		<!-- 	</div> -->
-		<!-- </div> -->
-	</div>
-	{{ partial "footer.html" . }}
-</body>
-</html>
+{{ define "main" }}
+  <section id="about">
+  {{ if isset .Site.Params "description" }}
+    {{ .Site.Params.description | markdownify }}
+  {{ end }}
+  {{ if isset .Site.Params "social" }}
+      <p>Find me on
+      {{ $length := (len .Site.Params.social) }}
+      {{ range $index, $elem := .Site.Params.social}}
+      {{ if eq $elem.name "email" }}
+        <a class="icon" target="_blank" rel="noopener" href="mailto:{{ $elem.link }}">
+          <i class="fas fa-envelope"></i>
+        </a>
+        {{ else if eq $elem.name "rss" }}
+        <a class="icon" target="_blank" rel="noopener" href="{{ $elem.link }}">
+          <i class="fas fa-rss"></i>
+        </a>
+        {{ else if eq $elem.name "scholar" }}
+        <a class="icon" target="_blank" rel="noopener" href="{{ $elem.link }}">
+          <i class="fas fa-graduation-cap"></i>
+        </a>
+        {{ else }}
+        <a class="icon" target="_blank" rel="noopener" href="{{ $elem.link }}">
+          <i class="fab fa-{{ lower $elem.name }}"></i>
+        </a>
+        {{ end }}
+        {{ if (lt (add $index 2) $length) }}
+          {{- print " , " -}}
+        {{ else if (lt (add $index 1) $length) }}
+          {{- print " and " -}}
+        {{ else }}
+          {{- print "." -}}
+        {{ end }}
+      {{ end }}
+      </p>
+  {{ end }}
+  </section>
+
+  <section id="writing">
+    <span class="h1"><a href="{{ .Site.Params.mainSection | absURL }}">Writings</a></span>
+    {{ if (and (and (isset .Site.Params "tagsoverview") (eq .Site.Params.tagsOverview true)) (gt (len .Site.Taxonomies.tags) 0)) }}
+    <span class="h2">Topics</span>
+    <span class="widget tagcloud">
+      {{ $AllRegularPagesCount := len .Site.RegularPages }}
+      {{ range $elem := .Site.Taxonomies.tags.Alphabetical }}
+      <a style="font-size: {{ (add 0.5 (mul 5 (div (float $elem.Count) $AllRegularPagesCount))) }}rem;" href="{{ $elem.Page.Permalink }}">
+        {{- .Page.Title -}}
+      </a>
+      {{ end }}
+    </span>
+    <span class="h2">Most recent</span>
+    {{ end }}
+
+    {{ $showAllPostsOnHomePage := false }}
+    {{ if (isset .Site.Params "showallpostsonhomepage") }}
+      {{ $showAllPostsOnHomePage = .Site.Params.ShowAllPostsOnHomePage }}
+    {{ end }}
+    {{ $dataFormat := .Site.Params.dateFormat | default "2006-01-02" }}
+    {{ $mainPosts := (sort ( where site.RegularPages "Type" "in" site.Params.mainSections ) "Date" "desc") }}
+    {{ if $showAllPostsOnHomePage }}
+    <ul class="post-list">
+      {{ range (.Paginate $mainPosts).Pages }}
+        <li class="post-item">
+          <div class="meta"><time datetime="{{ time .Date }}" itemprop="datePublished">{{ .Date.Format $dataFormat }}</time></div>
+          <span><a href="{{ .Permalink }}">{{ if .Title }} {{- .Title -}} {{ else }} {{- print "Untitled" -}}{{ end }}</a></span>
+        </li>
+      {{ end }}
+    </ul>
+
+    {{ partial "pagination.html" . }}
+
+    {{ else }}
+    <ul class="post-list">
+      {{ .Scratch.Set "count" 5 }}
+      {{ if isset .Site.Params "postsonhomepage" }}
+        {{ .Scratch.Set "count" .Site.Params.postsOnHomePage }}
+      {{ end }}
+      {{ range (first (.Scratch.Get "count") $mainPosts) }}
+        <li class="post-item">
+          <div class="meta"><time datetime="{{ time .Date }}" itemprop="datePublished">{{ .Date.Format $dataFormat }}</time></div>
+          <span><a href="{{ .Permalink }}">{{ if .Title }} {{- .Title -}} {{ else }} {{- print "Untitled" -}}{{ end }}</a></span>
+        </li>
+      {{ end }}
+    </ul>
+    {{ end }}
+  </section>
+
+  {{ $showProjectsList := false }}
+  {{ if .Site.Data.projects }}
+    {{ $showProjectsList = true }}
+  {{ else if (isset .Site.Params "showProjectsList") }}
+    {{ $showProjectsList = .Site.Params.ShowProjectsList }}
+  {{ end }}
+  {{ if $showProjectsList }}
+    {{ $projectsUrl := "#" }}
+    {{ if isset .Site.Params "projectsUrl" }}
+      {{ $projectsUrl = .Site.Params.projectsUrl }}
+    {{ end }}
+  <section id="projects">
+    <span class="h1"><a href="{{ $projectsUrl }}">Projects</a></span>
+    <ul class="project-list">
+        {{ range .Site.Data.projects.list }}
+        <li class="project-item">
+          <a href="{{ .url }}">{{ .name }}</a>: {{ .desc | markdownify }}
+        </li>
+        {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+{{ end }}

@@ -1,89 +1,73 @@
-baseURL = "https://laurenar.net/"
+baseURL = "http://example.org/"
 languageCode = "en-us"
-title = "Lauren Arnett"
-theme = "ink"
-paginate = 5
+title = "Lauren's Blog"
 
-#_copyright = "© Copyright notice"
 
-pygmentsstyle = "vs"
-pygmentscodefences = true
-pygmentscodefencesguesssyntax = true
+theme = "cactus"
 
-#googleAnalytics = "UA-123-45"
-#disqusShortname = "ink-demo"
-
-[params]
-	subtitle = "Software Developer"
-
-        lauren = "Hi! My name is Lauren Arnett."
-
-        bio = "I currently work on ETL systems for trading platforms as a Software Developer at [BroadPeak Partners, NYC](https://broadpeakpartners.com/). I completed my bachelor's degree in Computer Science at Columbia University in 2019, where I served as a research assistant exploring human-data interaction in the [WuLab](https://cudbg.github.io/lab/)."
-
-        hobbies = "I also tutor programming to kids in [Racket](https://htdp.org/2019-02-24/index.html)."
-
-        avatar = "https://avatars0.githubusercontent.com/u/22421815?s=460&u=7d132201a67dd4edf2ad6ece72cb1e1c63804fb8&v=4"
-
-	# Content types to disable Disqus on.
-	# disableDisqusTypes = ["page"]
-	
-	featherIconsCDN = true
-
-	#mode = "auto" # "dark" or "auto"
-	customCSS = "css/custom.css"  # Custom CSS applied to default styles.
-	# customDarkCSS = "css/custom-dark.css"  # Custom styles applied to dark mode css.
-	# customJS = ["js/custom.js", "js/custom1.js"]  # Custom JS scripts.
-
-        # ignoreFiles = [ "\\.org$" ]
-        math = true
-
-# Nav.
+# Main menu which appears below site header.
 [[menu.main]]
 name = "Home"
 url = "/"
 weight = 1
 
-# [[menu.main]]
-# name = "All posts"
-# url = "/posts"
-# weight = 2
+[[menu.main]]
+name = "Writings"
+url = "/posts"
+weight = 2
 
 [[menu.main]]
-name = "Projects"
-url = "/projects"
+name = "Tags"
+url = "/tags"
 weight = 3
 
-# [[menu.main]]
-# name = "Notes"
-# url = "/notes"
-# weight = 4
+[[menu.main]]
+name = "About"
+url = "/about"
+weight = 4
 
-# [[menu.main]]
-# name = "Tags"
-# url = "/tags"
-# weight = 4
+[markup]
+  [markup.tableOfContents]
+    endLevel = 4
+    ordered = false
+    startLevel = 2
 
-[[params.social]]
-name = "Github"
-icon = "github"
-url = "https://github.com/laurenarnett"
+[params]
 
+  colortheme = "light" # dark, light, white, or classic
+  enableEmoji = true
+  rss = true # generate rss feed. default value is false
+  googleAnalyticsAsync = true # use asynchronous tracking. Synchronous tracking by default
+  css = ["css/custom.css"]
 
-[[params.social]]
-name = "LinkedIn"
-icon = "linkedin"
-url = "https://www.linkedin.com/in/lauren-arnett-6ab037117/"
+  # Home page settings
+  description = "Hi! My name is Lauren Arnett. I am a computer programmer living in NYC. I also tutor programming to kids."
 
+  mainSection = "posts" # your main section
+  showAllPostsOnHomePage = false # default
+  postsOnHomePage = 5 # this option will be ignored if showAllPostsOnHomePage is set to true
+  tagsOverview = true # show tags overview by default.
+  showProjectsList = true # show projects list by default (if projects data file exists).
+  projectsUrl = "https://github.com/gohugoio" # title link for projects list
 
-[[params.social]]
-name = "Twitter"
-icon = "twitter"
-url = "https://twitter.com/_laurenarnett"
+  # https://gohugo.io/functions/format/#hugo-date-and-time-templating-reference
+  dateFormat = "2006-01-02" # default
 
-# [[params.social]]
-# name = "RSS"
-# icon = "rss"
-# url = "/index.xml"
+  # Post page settings
+  show_updated = false # default
 
-[taxonomies]
-   tag = "tags"
+  [params.comments]
+    enabled = false # default
+    engine = "disqus" # more supported engines will be added.
+
+  # the value of name should be an valid font awesome icon name (brands type)
+  # https://fontawesome.com/icons?d=gallery&s=brands
+  [[params.social]]
+    name = "github"
+    link = "https://github.com/gohugoio"
+  [[params.social]]
+    name = "linkedin"
+    link = "https://www.linkedin.com/company/github/"
+  [[params.social]]
+    name = "email"
+    link = "example@example.com"  # no need for "mailto:" in the head
