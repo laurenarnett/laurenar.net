@@ -1,0 +1,49 @@
+#+TITLE: Pushing Python toward C speeds with SIMD
+#+DATE: 2021-04-06
+#+TAGS[]: SIMD vectorize intrinsics Python Numba
+#+DRAFT: true
+
+In fields like data science and image processing, running time-intensive computations in a for loop iterating over an array is essential, and in a language like Python, receiving a runtime error due to some array shape mismatch hours into a computation is inexcusable, though all too commonplace. Speeding up array computations in Python code can always provide huge benefits in both research and industry, so I was thrilled to learn about [[https://numba.pydata.org/][Numba]], a JIT compiler for Python code with a focus on optimizing NumPy.
+
+Numba works by outputting LLVM instructions for functions with a special decorator, and calling those pre-compiled functions in place of running the Python interpreter in the function body. What I find to be one of the coolest features of Numba is its ability to translate some loops into vector instructions, also called SIMD instructions, meaning "Single Instruction, Multiple Data."
+
+SIMD is a variety of "data parallelism" that works when applying the same instruction to every element in an array. Instead of applying the instruction to the first element of the array, then the second, then the third, etc., a program that is vectorized/uses SIMD instructions will work on 4, 8, 16 or more elements of the array with a single instruction.
+
+Let's compile an example program using Numba, which sums all elements of an array.
+
+#+BEGIN_SRC python
+@jit(nopython=True)
+def arr_sum(arr):
+    total = 0
+    for i in range(arr.shape[0]):
+        total += arr[i]
+    return total
+#+END_SRC
+
+This function takes a NumPy array as an argument, and rather than call NumPy's built in =np.sum=, it runs an explicit for loop iterating over each element. The =nopython=True= argument to the =@jit= decorator tells Numba to disallow calls to the Python interpreter.
+
+Numba compiles this for loop to LLVM, which does its own semantic analysis. When LLVM recognizes a for loop performing the same operation to every element in the array, it invokes auto-vectorization to output SIMD instructions.
+
+I'll include the below excerpt of the actual assembly output just to give a flavor of what the compiled output looks like. The important thing to keep in mind here is simply that the vector registers in Intel architectures are always named =%xmm= and =%ymm=, and the instructions operating on vector registers have names always starting with =v= like =vpaddq=, =vpmovzxdq=, and =vpxor=. Seeing this in our assembly output, we know that our program is running with SIMD parallelism!
+
+#+BEGIN_SRC asm
+LBB0_6:
+	subq	%rcx, %rsi
+	vpxor	%xmm0, %xmm0, %xmm0
+	xorl	%edx, %edx
+	vpxor	%xmm1, %xmm1, %xmm1
+	vpxor	%xmm2, %xmm2, %xmm2
+	vpxor	%xmm3, %xmm3, %xmm3
+#+END_SRC
+
+Let's take a look at how effective Numba JIT-compilation with SIMD parallelism is on the array sum program in comparison with a vanilla Python for loop, or with =np.sum()=.
+
+#+BEGIN_EXPORT html
+<iframe width="740" height="469" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS0LwU1YN5c7D1oB1f_wjNt3Wyqnz65qMXUbP7DzNMoABtdSNZAgUpJfBSG0PCwqspKMGaMdYw7mgOL/pubchart?oid=244031876&amp;format=interactive"></iframe>
+#+END_EXPORT
+
+This shows in microseconds the average run time over 1000 iterations of summing integers in a 65,000-length array. We see that using NumPy's =sum()= function already provides a huge performance improvement over vanilla Python, and Numba with an explicit for loop is even faster. If the programmer leaves in a =np.sum()= inside a Numba JIT-compiled function, however, since LLVM does not know how to optimize NumPy functions, the program actually performs worse than if it had not been JIT-compiled and just used vanilla NumPy.
+
+I also wanted to compare against implementations of the same program in C, and in C using the =__m128i _mm_add_epi32(__m128i a, __m128i b)= [[https://software.intel.com/sites/landingpage/IntrinsicsGuide/#expand=94,94,94,94&text=mm_add][Intel intrinsic]] to vectorize the program to sum 4 array entries at a time. The Numba JIT-compiled vectorized array sum actually comes very close to achieving vanilla C speeds! Using the SIMD intrinsics in C brings us even closer to the hardware though, resulting in the fastest version of array sum as expected.
+
+The idea that hardware sits mostly dormant on my system that, in the right scenario, can speed up computation on my machine simply by having the compiler output a different instruction fascinates me. Numba provides a very accessible interface for trying out SIMD without the complexity of programming using intrinsics that I would highly encourage anyone interested in speeding up their Python computations to try out.
