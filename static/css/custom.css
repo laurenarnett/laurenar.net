@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&display=swap');
 
 body {
   margin: 0;
@@ -7,7 +8,7 @@ body {
   color: #363533;
   font-display: swap;
   font-weight: 400;
-  font-size: 14px;
+  font-size: 18px;
   font-family: "Lora", sans-serif;
   line-height: 1.725;
   text-rendering: geometricPrecision;
@@ -15,3 +16,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
 }
+
+pre {
+  overflow-x: auto;
+  padding: 10px 15px;
+  padding-bottom: 0;
+  border: 1px dotted #666;
+  border-radius: 4px;
+  font-size: 16px;
+  line-height: 26px;
+  -webkit-border-radius: 4px;
+}
+
+code {
+  padding: 0 3px;
+  border: 0px none #666;
+  font-family: "Source Code Pro", monospace;
+  border-radius: 0px;
+  background-color: #ECECEC;
+  -webkit-border-radius: 2px;
+}
+
+
