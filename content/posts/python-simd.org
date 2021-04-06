@@ -1,6 +1,7 @@
 #+TITLE: Pushing Python toward C speeds with SIMD
 #+DATE: 2021-04-06
 #+TAGS[]: SIMD vectorize intrinsics Python Numba
+#+DRAFT: true
 
 In fields like data science and image processing, running time-intensive computations in a for loop iterating over an array is essential, and in a language like Python, receiving a runtime error due to some array shape mismatch hours into a computation is inexcusable, though all too commonplace. Speeding up array computations in Python code can always provide huge benefits in both research and industry, so I was thrilled to learn about [[https://numba.pydata.org/][Numba]], a JIT compiler for Python code with a focus on optimizing NumPy.
 
