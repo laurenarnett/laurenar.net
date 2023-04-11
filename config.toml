@@ -50,7 +50,7 @@ weight = 4
   css = ["css/custom.css"]
 
   # Home page settings
-  description = "Hello! My name is Lauren Arnett. I am a computer programmer living in NYC interested in backend development. I'm currently in a batch at [Recurse Center](https://www.recurse.com/), where I'm focusing on studying Haskell, distributed systems, and SIMD parallelism. \n\n I also tutor programming to kids virtually and am happy to talk to new interested students!"
+  description = "Hello! My name is Lauren Arnett. I am a computer programmer living in NYC interested in backend development. In 2021, I attended a batch at [Recurse Center](https://www.recurse.com/), where I focused on studying Haskell, distributed systems, and SIMD parallelism. \n\n I also tutor programming to middle school-age students virtually."
 
   mainSection = "posts" # your main section
   showAllPostsOnHomePage = true # default
