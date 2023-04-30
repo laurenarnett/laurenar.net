@@ -17,6 +17,42 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+*:after {
+  box-sizing: border-box;
+}
+body h1,
+body .h1 {
+  display: block;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  text-decoration: underline dotted;
+  letter-spacing: 0.01em;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 1.5em;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+}
+body h2,
+body .h2 {
+  position: relative;
+  display: block;
+  margin-top: 0.5rem;
+  margin-bottom: 0.2rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: bold;
+  font-size: 1em;
+}
+article .content h2:before {
+  position: absolute;
+  top: -4px;
+  left: -1rem;
+  color: #000;
+  content: "";
+  font-weight: bold;
+  font-size: 1.2rem;
+}
 pre {
   overflow-x: auto;
   padding: 10px 15px;
@@ -36,5 +72,32 @@ code {
   background-color: #F1F1F1;
   -webkit-border-radius: 2px;
 }
+.pagination {
+  display: inline-block;
+  margin-top: 2rem;
+  width: 100%;
+  text-align: center;
+}
 
+.border-box {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin-top: 0rem;
+  margin-bottom: 0.2rem;
+}
 
+#tag-cloud .tag-cloud-title {
+  color: #666;
+}
+.post-list .post-item .meta {
+  display: block;
+  margin-top: 0.3rem;
+  margin-right: 16px;
+  min-width: 100px;
+  color: #666;
+  font-size: 14px;
+}
