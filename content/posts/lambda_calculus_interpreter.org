@@ -1,0 +1,191 @@
+#+TITLE: Lambda Calculus Interpreter in Rust
+#+DATE: 2023-08-30
+#+TAGS[]: lambda calculus Rust interpreter
+#+DRAFT: true
+
+Building a lambda calculus interpreter gives a great idea of what working in a new language is like. Trying my hand at one as a Rust novice, I learned not only the basics about Rust syntax for pattern matching and enum types, but also how the compiler helps guide the user in managing memory usage. I'll be sharing my experience of first creating an interpreter on just the heap in Part I, and then in Part II walk through what it was like to experiment with moving some memory usage to the stack.
+
+* Part I: Building the interpreter on the heap
+** Exp enum
+
+Every expression in this lambda calculus language is one of three varieties:
+
+1. \(x\) (variables)
+2. \(\lambda x . M\) (function abstraction)
+3. \(M N \) (application)
+
+We'll make an enum type =Exp= with a variant for each of these.
+
+#+BEGIN_SRC rust
+enum Exp {
+    Var(String),
+    Lambda(String, Box<Exp>),
+    App(Box<Exp>, Box<Exp>),
+}
+#+END_SRC
+
+For this first foray into Rust, I'm depending heavily on use of the heap with =Box=, which will greatly simplify dealing with recursion in all of the interpreter code. To start with, we need to use the heap to express this recursive =Exp= type. Without =Box= (i.e. just =App(Exp, Exp)=), we will get an error =recursive type `Exp` has infinite size= since the compiler cannot determine the size of the enum. The compiler helpfully suggests some methods for creating indirection including putting a =Box= around our inner =Exp=, and we can proceed designing our methods for beta reduction and substitution.
+
+** \((\lambda x . x \)) "\(foo\)"
+
+The simplest expression we want to support is \((\lambda x . x\)) "\(foo\)". This expression exercises all cases of our =Exp= enum and lets us get started with more than the trivial case (just "\(foo\)"). Specifically, the result of this expression is the application of the identity function \(\lambda x . x\) to the value "\(foo\)". Expressed as an =Exp=, this expression looks like:
+#+BEGIN_SRC rust
+Exp::App(
+    Box::new(Exp::Lambda("x".to_string(), Box::new(Exp::Var("x".to_string())))),
+    Box::new(Exp::Var("foo".to_string())))
+#+END_SRC
+
+For now, we are using ="x".to_string()= to create heap-allocated =String= objects, though we will explore using references to string literals in Part II. Let's write our =reduce= and =substitute= functions with this test expression in mind.
+
+** =reduce=
+=reduce= is a function that takes an =Exp= as input and returns an =Exp= that is the result of evaluating the input. We'll recursively call =reduce= on our expression, and we need to pattern-match the type of our expression with each of =Var=, =Lambda=, and =App=. The simplest case here is definitely =Var=, which reduces to itself.
+#+BEGIN_SRC rust
+ Exp::Var(s) => Exp::Var(s)
+#+END_SRC
+
+With the second case of =Lambda=, we must recurse into the lambda's expression and evaluate it.
+#+BEGIN_SRC rust
+ Exp::Lambda(s, e1) => Exp::Lambda(s, Box::new(reduce(*e1)))
+#+END_SRC
+
+In the case of \(\lambda x . x\), we won't have any expression to evaluate, and the interesting reduction will come with the application. In this case of our =App=, we are applying a lambda \(\lambda x . x\) to our expression "\(foo\)", and will need to make a substitution. In all other cases, we just need to recursively call =reduce= on both =e1= and =e2=. Let's draft the =App= pattern match cases.
+
+#+BEGIN_SRC rust
+Exp::App(e1, e2) => match *e1 {
+    Exp::Lambda(s, e1a) => reduce(substitute(s, *e1a, *e2)),
+    other => reduce(Exp::App(Box::new(reduce(other)), Box::new(reduce(*e2))))
+}
+#+END_SRC
+
+We match on =*e1=, using =*= to unbox the value inside the first expression. To see this working, we'll need to turn our attention to implementing =substitute=. Putting everything together, our =reduce= function looks like:
+
+#+BEGIN_SRC rust
+fn reduce(e: Exp) -> Exp {
+    match e {
+        Exp::Var(s) => Exp::Var(s),
+        Exp::App(e1, e2) => match *e1 {
+            Exp::Lambda(s, e1a) => reduce(substitute(s, *e1a, *e2)),
+            other => reduce(Exp::App(Box::new(reduce(other)), Box::new(reduce(*e2)))),
+        },
+        Exp::Lambda(s, e1) => Exp::Lambda(s, Box::new(reduce(*e1))),
+    }
+}
+#+END_SRC
+
+
+** =substitute=
+Our substitution function says that given some lambda function with argument =x= and function body =e1=, and some expression =e2=, it will return =e1= with all instances of =x= in its function body replaced with =e2=. This is a very general definition of substitution, but it is essentially the same as "plugging in" for variables we learned in algebra. We want to match on the type of the =Exp= that is the lambda's function body and break down this expression recursively till we have replaced all instances of the variable =x=.
+
+If our function body =e1= is either itself a =Lambda= or an =App=, we need to recurse into each =Exp= to find any instances of the variable. If the function body is just a =Var= */and/* the var we see is the same as our argument, we are ready to replace! (Otherwise we should do nothing, e.g. \((\lambda x . y) z \rightarrow y \))
+
+#+BEGIN_SRC rust
+fn substitute(v: String, e1: Exp, e2: Exp) -> Exp {
+    match e1 {
+        Exp::App(e1a, e1b) => {
+            let v1 = v.clone();
+            let e2a = e2.clone();
+
+            Exp::App(
+                Box::new(substitute(v, *e1a, e2)),
+                Box::new(substitute(v1, *e1b, e2a)),
+            )
+        }
+        Exp::Lambda(s, e) =>
+            if s == v {
+                // s is shadowing v, no substitutions needed inside e
+                Exp::Lambda(s, e)
+            } else {
+                Exp::Lambda(s, Box::new(substitute(v, *e, e2)))
+            }
+        Exp::Var(s) => {
+            if s == v {
+                e2 // replace!
+            } else {
+                Exp::Var(s)
+            }
+        }
+    }
+}
+#+END_SRC
+
+Looking at the case where we match =App=, we will have to make separate calls to =substitute= on each of the =App='s expressions. We can pass in =v= and =e2= to our first call to =substitute= on line 8, which will gain ownership of those variables. We'll make copies of them, =v1= and =e2a=, that we can pass to the second call on line 9.
+
+** Interpret
+Let's try it out!
+#+BEGIN_SRC rust
+fn main() {
+    println!("{:?}",
+             reduce(Exp::App(Box::new(Exp::Lambda("x".to_string(), Box::new(Exp::Var("x".to_string())))),
+                             Box::new(Exp::Var("foo".to_string())))));
+}
+#+END_SRC
+
+#+BEGIN_SRC bash
+$> cargo run
+Var("foo")
+#+END_SRC
+
+We've correctly reduced and substituted!
+
+* Part II: Experiment with the stack
+** Moving strings to the stack & Lifetime
+Although it's been convenient to have our whole program reside on the heap, let's now explore representing strings by utilizing references to the stack. Whereas before we were creating strings using ="x".to_string()=, writing ="x"= alone declares a string literal that is in static memory and immutable. To pass in a string literal to our =Exp= constructor, we need to specify the lifetime of the =Exp= values. Lifetimes are a Rust-language concept that ensure memory in scope is valid. To use a reference to a string in one of our enum variants, we must prove at compile time that the string reference is still in scope and has not yet been collected by the garbage collector.
+
+We'll use a lifetime parameter to tie the =Exp= object's lifetime to that of the string literal by writing =Exp<'a>=. Here's our new enum.
+#+BEGIN_SRC rust
+enum Exp<'a> {
+    Var(&'a str),
+    App(Box<Exp<'a>>, Box<Exp<'a>>),
+    Lambda(&'a str, Box<Exp<'a>>)
+}
+#+END_SRC
+
+Our previous =substitute= function took a =String= as one of its arguments, so we must alter it to accept a string reference. Our new signature becomes:
+#+BEGIN_SRC rust
+ fn substitute<'a>(v: &'a str, e1: Exp<'a>, e2: Exp<'a>) -> Exp<'a>
+#+END_SRC
+
+If the function takes a reference as an argument, that function itself needs to be parameterized by the lifetime of that argument. In addition, since our return value is constructed using this reference, it also needs to be parameterized by the lifetime of the reference. In the body of =substitute=, we can now remove the line =let v1 = v.clone();= from line 4 in the example from Part I. Since both sub-calls to =substitute= have the string reference lifetime parameter, they can safely share =v=.
+
+Finally, we can remove all calls to ="x".to_string()=, and since =reduce= does not take a string as an argument, no changes are needed. A quick run of valgrind on each implementation reports that the number of allocs has reduced from 17 to 14. This confirms that the 3 strings we were previously allocating are no longer on the heap.
+
+** Moving =Exp= to the stack
+Now that we have strings on the stack, can we go a step further and use references to =Exp= values? That is, can we implement the same functionality with this definition of =Exp=:
+
+#+BEGIN_SRC rust
+enum Exp<'a> {
+    Var(&'a str),
+    App(&'a Exp<'a>, &'a Exp<'a>),
+    Lambda(&'a str, &'a Exp<'a>)
+}
+#+END_SRC
+
+With this definition, we start running into major problems when trying to make any recursive calls to =reduce= and =substitute=. For example, =reduce= would now take a reference to an =Exp= with lifetime ='a=, and return an =Exp= with the same lifetime:
+
+#+BEGIN_SRC rust
+ fn reduce<'a>(e: &'a Exp) -> Exp<'a>
+#+END_SRC
+
+Recursive calls to =reduce= would receive references to =Exp= values owned by the current function. The recursive calls will create new instances of =Exp= in their function bodies, and return references to them. The current function will use references to these recursively-created =Exp= in constructing a new =Exp= instance in turn. However, these recursively-created =Exp= will be destroyed when the current function returns because of the lifetime parameter, so the references will no longer be valid and would result in undefined behavior. The Rust compiler confirms this flaw, returning an error: "cannot return value referencing temporary value." Thus, =reduce= and =substitute= do need to return owned values after all, and we've reached a dead end with this definition of =Exp=.
+
+** Sailing out to C
+But what if we were feeling particularly stubborn and wanted to bypass this constraint from the Rust compiler in a more flexible language that allows us to dig our own graves, like C? Reimplementing the lambda calculus in C, we will write our two functions:
+
+#+BEGIN_SRC C
+Exp* reduce(Exp* exp);
+Exp* substitute(char* s, Exp* e1, Exp* e2);
+#+END_SRC
+
+(full listing [[https://github.com/laurenarnett/rust-lambda-calculus/blob/main/c-lambda-calculus/lambda_calculus.c][here]])
+
+Instead of allocating new =Exp= in each function and returning the pointer to it like the Rust compiler forces us to do, let's just blindly confidently return the address to the locally constructed =Exp=. We write, imprudently wielding the manual memory management power C has granted us, =return &result;=, and successfully compile one of the lowest heap-usage lambda calculus interpreters ever written. Time to run it!
+
+#+BEGIN_SRC
+~> ./lambda_calculus
+Segmentation fault (core dumped)
+#+END_SRC
+
+The program reads some garbage memory trying to retrieve one of these locally defined =Exp='s, and segfaults. Looks like we should have heeded the warnings of the Rust compiler when it was begging us to never run this code and encounter these disastrous consequences. We've now seen first-hand how Rust's insistence on obeying the lifetime parameter and safe memory management is not an inconvenience, but rather a crucial safeguard.
+
+** Conclusions
+Time to wrap up since we're reaching the end of this blog post's lifetime. During this project, I found that the ability to catch memory-related errors at compile-time, along with a compiler that nudges you in the right direction with helpful suggestions, greatly enhanced my overall developer experience as a Rust novice. For a relatively simple first project, I learned a ton about Rust's powerful memory-management features and strict safety guarantees, and am excited to explore more ways the compiler provides guardrails against unsafe memory-management behavior.
