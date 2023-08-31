@@ -31,13 +31,14 @@ For this first foray into Rust, I'm depending heavily on use of the heap with =B
 The simplest expression we want to support is \((\lambda x . x\)) "\(foo\)". This expression exercises all cases of our =Exp= enum and lets us get started with more than the trivial case (just "\(foo\)"). Specifically, the result of this expression is the application of the identity function \(\lambda x . x\) to the value "\(foo\)". Expressed as an =Exp=, this expression looks like:
 #+BEGIN_SRC rust
 Exp::App(
-    Box::new(Exp::Lambda("x".to_string(), Box::new(Exp::Var("x".to_string())))),
+    Box::new(Exp::Lambda("x".to_string(),
+                         Box::new(Exp::Var("x".to_string())))),
     Box::new(Exp::Var("foo".to_string())))
 #+END_SRC
 
 For now, we are using ="x".to_string()= to create heap-allocated =String= objects, though we will explore using references to string literals in Part II. Let's write our =reduce= and =substitute= functions with this test expression in mind.
 
-** =reduce=
+** reduce
 =reduce= is a function that takes an =Exp= as input and returns an =Exp= that is the result of evaluating the input. We'll recursively call =reduce= on our expression, and we need to pattern-match the type of our expression with each of =Var=, =Lambda=, and =App=. The simplest case here is definitely =Var=, which reduces to itself.
 #+BEGIN_SRC rust
  Exp::Var(s) => Exp::Var(s)
@@ -73,7 +74,7 @@ fn reduce(e: Exp) -> Exp {
 #+END_SRC
 
 
-** =substitute=
+** substitute
 Our substitution function says that given some lambda function with argument =x= and function body =e1=, and some expression =e2=, it will return =e1= with all instances of =x= in its function body replaced with =e2=. This is a very general definition of substitution, but it is essentially the same as "plugging in" for variables we learned in algebra. We want to match on the type of the =Exp= that is the lambda's function body and break down this expression recursively till we have replaced all instances of the variable =x=.
 
 If our function body =e1= is either itself a =Lambda= or an =App=, we need to recurse into each =Exp= to find any instances of the variable. If the function body is just a =Var= */and/* the var we see is the same as our argument, we are ready to replace! (Otherwise we should do nothing, e.g. \((\lambda x . y) z \rightarrow y \))
@@ -115,7 +116,8 @@ Let's try it out!
 #+BEGIN_SRC rust
 fn main() {
     println!("{:?}",
-             reduce(Exp::App(Box::new(Exp::Lambda("x".to_string(), Box::new(Exp::Var("x".to_string())))),
+             reduce(Exp::App(Box::new(Exp::Lambda("x".to_string(),
+                                                  Box::new(Exp::Var("x".to_string())))),
                              Box::new(Exp::Var("foo".to_string())))));
 }
 #+END_SRC
@@ -149,7 +151,7 @@ If the function takes a reference as an argument, that function itself needs to 
 
 Finally, we can remove all calls to ="x".to_string()=, and since =reduce= does not take a string as an argument, no changes are needed. A quick run of valgrind on each implementation reports that the number of allocs has reduced from 17 to 14. This confirms that the 3 strings we were previously allocating are no longer on the heap.
 
-** Moving =Exp= to the stack
+** Moving Exp to the stack
 Now that we have strings on the stack, can we go a step further and use references to =Exp= values? That is, can we implement the same functionality with this definition of =Exp=:
 
 #+BEGIN_SRC rust

@@ -1,12 +1,12 @@
 // by @GabiThume (https://github.com/gabithume)
-$color-background: #f7f4eb;
+$color-background: #EEEEEE; //#f7f4eb;
 $color-footer-mobile-1: darken($color-background, 2%);
 $color-footer-mobile-2: darken($color-background, 10%);
-$color-background-code: darken($color-background, 2%);
+$color-background-code: #fff;
 $color-border: #666;
 $color-meta: #666;
-$color-meta-code: lighten($color-meta, 10%);
-$color-link: rgba(43, 188, 138, 1);
+$color-meta-code: $color-meta;
+$color-link: #d44375; //rgba(43, 188, 138, 1);
 $color-text: #363533;
 $color-accent-3: #666666;
 $color-accent-2: #111111;
