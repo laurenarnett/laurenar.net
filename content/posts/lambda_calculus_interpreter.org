@@ -1,5 +1,5 @@
 #+TITLE: Lambda Calculus Interpreter in Rust
-#+DATE: 2023-08-30
+#+DATE: 2023-08-31
 #+TAGS[]: lambda calculus Rust interpreter
 
 Building a lambda calculus interpreter gives a great idea of what working in a new language is like. Trying my hand at one as a Rust novice, I learned not only the basics about Rust syntax for pattern matching and enum types, but also how the compiler helps guide the user in managing memory usage. I'll be sharing my experience of first creating an interpreter on just the heap in Part I, and then in Part II walk through what it was like to experiment with moving some memory usage to the stack.
